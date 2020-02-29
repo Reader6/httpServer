@@ -9,7 +9,7 @@ const char *error_404_form="The requested file was not found on this server.\n";
 const char *error_500_title="Internal Error";
 const char *error_500_form="There was an unusual problem serving the requestd file\n";
 
-const char *doc_root="./var//www//index.html";//网页根目录
+const char *doc_root="/root/projects/httpserver/var/www/index.html";//网页根目录
 
 //设置非阻塞
 int setnonblacking(int fd)
@@ -55,10 +55,12 @@ void http_conn::close_conn(bool real_close){
 
 void http_conn::process()
 {
+
     RESULT_CODE read_ret=process_read();
     if(read_ret==NO_REQUEST){
 
         modfd(m_epolled,m_socked,EPOLLIN);
+        //异常
         return ;
     }
     bool write_ret=process_write(read_ret);
@@ -90,6 +92,7 @@ void http_conn::init_state(){
     m_check_state=CHEACK_STATE_REQUESTLINE;
     m_read_idx=0;
     m_write_idx=0;
+    m_checked_idx = 0;
     memset(m_read_buf,'\0',READ_BUFFER_SIZE);
     memset(m_write_buf,'\0',WRITE_BUFFER_SIZE);
     memset(m_real_file,'\0',FILENAME_LEN);
@@ -104,104 +107,104 @@ http_conn::RESULT_CODE http_conn::process_read()//main state mache
         text=get_line();
         m_start_line=m_checked_idx;
         switch (m_check_state) {
-        case CHEACK_STATE_REQUESTLINE:{
-            ret=parse_request_line(text);
-            if(ret==BAD_REQUEST){
-                return BAD_REQUEST;
-            }
-            break;
-        }
-        case CHEACK_STATE_HEADER:{
-            ret=parse_headers(text);
-            if(ret==BAD_REQUEST){
-                return  BAD_REQUEST;
+                case CHEACK_STATE_REQUESTLINE:{
+                    ret=parse_request_line(text);
+                    if(ret==BAD_REQUEST){
+                        return BAD_REQUEST;
+                    }
+                    break;
+                }
+                case CHEACK_STATE_HEADER:{
+                    ret=parse_headers(text);
+                    if(ret==BAD_REQUEST){
+                        return  BAD_REQUEST;
 
-            }
-            else if(ret==GET_REQUEST){
-                return do_request();
-            }
-            break;
-        }
-        case CHEACK_STATE_CONTENT:
-        {
-            ret=parse_content(text);
-            if(ret==GET_REQUEST){
-                return do_request();
-            }
-            line_status=LINE_OPEN;
-            break;
-        }
-        default:{
-            return INTERNAL_ERROR;
-        }
+                    }
+                    else if(ret==GET_REQUEST){
+                        return do_request();
+                    }
+                    break;
+                }
+                case CHEACK_STATE_CONTENT:
+                {
+                    ret=parse_content(text);
+                    if(ret==GET_REQUEST){
+                        return do_request();
+                    }
+                    line_status=LINE_OPEN;
+                    break;
+                }
+                default:{
+                    return INTERNAL_ERROR;
+                }
 
 
         }
 
      }
-return NO_REQUEST;
+        return NO_REQUEST;
 }
 
 bool http_conn::process_write(http_conn::RESULT_CODE ret)
 {
     switch (ret) {
-    case INTERNAL_ERROR:{
-               add_status_line(500,error_500_title);
-               add_headers(strlen(error_500_form));
-               if(!add_content(error_500_form)){
-                   return false;
-               }
-               break;
-        }
-    case BAD_REQUEST:{
-        add_status_line(400,error_400_title);
-        add_headers(strlen(error_400_form));
-        if(!add_content(error_400_form)){
-            return false;
-        }
-        break;
-    }
-    case NO_RESOURCE:{
-        add_status_line(404,error_404_title);
-        add_headers(strlen(error_404_form));
-        if(!add_content(error_404_form)){
-            return false;
-        }
-        break;
-    }
-    case FORBIDDEN_REQUEST:{
-        add_status_line(400,error_403_title);
-        add_headers(strlen(error_403_form));
-        if(!add_content(error_403_form)){
-            return false;
-        }
-        break;
-    }
-    case FILE_REQUEST:{
-        add_status_line(200,ok_200_title);
-        if(m_file_stat.st_size!=0){
-            add_headers(m_file_stat.st_size);
-            m_lv[0].iov_base=m_write_buf;
-            m_lv[0].iov_len=m_write_idx;
-            m_lv[1].iov_base=m_file_address;
-            m_lv[1].iov_len=m_file_stat.st_size;
-            m_iv_count=2;
-            return true;
-
-        }
-        else{
-            const char *ok_string="<html><body><h1>hello</h1></body></html>";
-            add_headers(strlen(ok_string));
-            if(!add_content(ok_string))
-              {
+        case INTERNAL_ERROR:{
+                   add_status_line(500,error_500_title);
+                   add_headers(strlen(error_500_form));
+                   if(!add_content(error_500_form)){
+                       return false;
+                   }
+                   break;
+            }
+        case BAD_REQUEST:{
+            add_status_line(400,error_400_title);
+            add_headers(strlen(error_400_form));
+            if(!add_content(error_400_form)){
                 return false;
-              }
+            }
+            break;
         }
+        case NO_RESOURCE:{
+            add_status_line(404,error_404_title);
+            add_headers(strlen(error_404_form));
+            if(!add_content(error_404_form)){
+                return false;
+            }
+            break;
+        }
+        case FORBIDDEN_REQUEST:{
+            add_status_line(400,error_403_title);
+            add_headers(strlen(error_403_form));
+            if(!add_content(error_403_form)){
+                return false;
+            }
+            break;
+        }
+        case FILE_REQUEST:{
+            add_status_line(200,ok_200_title);
+            if(m_file_stat.st_size!=0){
+                add_headers(m_file_stat.st_size);
+                m_lv[0].iov_base=m_write_buf;
+                m_lv[0].iov_len=m_write_idx;
+                m_lv[1].iov_base=m_file_address;
+                m_lv[1].iov_len=m_file_stat.st_size;
+                m_iv_count=2;
+                return true;
 
-    }
-    default:{
-        return false;
-    }
+            }
+            else{
+                const char *ok_string="<html><body><h1>hello</h1></body></html>";
+                add_headers(strlen(ok_string));
+                if(!add_content(ok_string))
+                  {
+                    return false;
+                  }
+            }
+
+        }
+        default:{
+            return false;
+        }
     }
     m_lv[0].iov_base=m_write_buf;
     m_lv[0].iov_len=m_write_idx;
@@ -312,6 +315,7 @@ bool http_conn::write()
         bytes_have_send+=temp;
         if(bytes_to_send<bytes_have_send){
             unmap();
+            //有修改
             if(m_link){
                 init_state();
                 modfd(m_epolled,m_socked,EPOLLIN);

@@ -45,12 +45,12 @@ int main(int argc,char *argv[])
     int port=atoi(argv[2]);
     */
     const char *ip="127.0.0.1";
-    int port=8000;
+    int port=8080;
 
     addsig(SIGPIPE,SIG_IGN);//ignore SIGPIPE signal
     threadpool<http_conn>*pool=NULL;
     try {
-        pool=new threadpool<http_conn>(1); //defalut 8 threads and 10000 request
+        pool=new threadpool<http_conn>(8); //defalut 8 threads and 10000 request
     } catch (...) {
         return -1;
     }
@@ -78,6 +78,7 @@ int main(int argc,char *argv[])
  //   assert(epollfd==-1);
     addfd(epollfd,lisenfd,false);
     http_conn::m_epolled=epollfd;
+
     while (true) {
             int number=epoll_wait(epollfd,events,MAX_EVENT_NUMBER,-1);
 

@@ -2,6 +2,7 @@
 #define THREADPOOL_H
 #include<list>
 #include<cstdio>
+#include<iostream>
 #include<pthread.h>
 #include"locker.h"
 template <typename T>
@@ -85,10 +86,13 @@ void threadpool<T>::run()
         T *request=m_workqueue.front();
         m_workqueue.pop_front();
         m_queuelocker.unlock();
+
         if(!request){
+            std::cout << "warn 当前没有请求" << std::endl;
             continue;
         }
         request->process();
+        std::cout<< "thread_id"<<pthread_self() << "ok" << std::endl;
     }
 }
 #endif // THREADPOOL_H
