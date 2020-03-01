@@ -44,7 +44,18 @@ int main(int argc,char *argv[])
     const char *ip=argv[1];
     int port=atoi(argv[2]);
     */
-    const char *ip="127.0.0.1";
+    char* buffer;
+    //也可以将buffer作为输出参数  
+    if ((buffer = getcwd(NULL, 0)) == NULL)
+    {
+        perror("getcwd error");
+    }
+    else
+    {
+        printf("%s\n", buffer);
+        free(buffer);
+    }
+    const char *ip="0，0，0，0";
     int port=8080;
 
     addsig(SIGPIPE,SIG_IGN);//ignore SIGPIPE signal
