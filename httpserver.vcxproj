@@ -75,21 +75,28 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
+    <ClCompile Include="commen.cpp" />
+    <ClCompile Include="httpServer.cpp" />
     <ClCompile Include="http_conn.cpp" />
     <ClCompile Include="locker.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="commen.h" />
+    <ClInclude Include="httpServer.h" />
     <ClInclude Include="http_conn.h" />
     <ClInclude Include="locker.h" />
-    <ClInclude Include="test.h" />
     <ClInclude Include="threadpool.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="httpServer.pro" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <AdditionalOptions>-lpthread %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
       <AdditionalOptions>-lpthread %(AdditionalOptions)</AdditionalOptions>
     </Link>

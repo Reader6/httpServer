@@ -1,1 +1,0 @@
-g++ -o "/root/projects/httpserver/bin/x64/Debug/httpserver.out" -Wl,--no-undefined -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -lpthread /root/projects/httpserver/obj/x64/Debug/http_conn.o /root/projects/httpserver/obj/x64/Debug/locker.o /root/projects/httpserver/obj/x64/Debug/main.o /root/projects/httpserver/obj/x64/Debug/test.o

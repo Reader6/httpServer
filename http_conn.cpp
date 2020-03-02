@@ -1,4 +1,5 @@
 #include "http_conn.h"
+#include"commen.h"
 const char *ok_200_title="OK";
 const char *error_400_title="Bad Request";
 const char *error_400_form="Your request has bad syntax or is in herently Impossible to staticfy.\n";
@@ -10,38 +11,6 @@ const char *error_500_title="Internal Error";
 const char *error_500_form="There was an unusual problem serving the requestd file\n";
 
 const char *doc_root="/root/www";//网页根目录
-
-//设置非阻塞
-int setnonblacking(int fd)
-{
-    int old_option=fcntl(fd,F_GETFL);//ET模式  一次读取
-    int new_option=old_option | O_NONBLOCK;//非堵塞
-    fcntl(fd,F_SETFL,new_option);//添加新方法
-    return old_option;//返回之前设置
-
-};
-void addfd(int epollfd,int fd,bool one_shot)
-{
-        epoll_event event;
-        event.data.fd=fd;
-        event.events=EPOLLIN |EPOLLET |EPOLLRDHUP;//注册接受  挂起 事件
-        if(one_shot){//防止多个线程同时处理一个连接
-            event.events|=EPOLLONESHOT;
-        }
-        epoll_ctl(epollfd,EPOLL_CTL_ADD,fd,&event);
-        setnonblacking(fd);
-}
-void removefd(int epolled,int fd){
-    epoll_ctl(epolled,EPOLL_CTL_DEL,fd,0);
-    close(fd);
-}
-void modfd(int epolled,int fd,int ev){
-    epoll_event event;
-    event.data.fd=fd;
-    event.events=ev |EPOLLET |EPOLLONESHOT | EPOLLRDHUP;
-    epoll_ctl(epolled,EPOLL_CTL_MOD,fd,&event);
-}
-
 
 int http_conn::m_user_count=0;
 int http_conn::m_epolled=-1;
