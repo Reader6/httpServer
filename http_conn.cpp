@@ -214,7 +214,7 @@ bool http_conn::add_content(const char *content)
 
 bool http_conn::add_status_line(int status, const char *title)
 {
-    return add_response("%s%d%s\r\n","HTTP/1.1",status,title);
+    return add_response("%s %d %s\r\n","HTTP/1.1 ",status,title);
 }
 
 bool http_conn::add_content_length(int content_length)
