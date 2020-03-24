@@ -16,8 +16,11 @@
 #include<stdlib.h>
 #include<sys/mman.h>
 #include<sys/uio.h>
+#include<sys/sendfile.h>
 #include<stdarg.h>
 #include<errno.h>
+#include<iostream>
+#include<vector>
 #include"locker.h"
 class http_conn
 {
@@ -83,6 +86,8 @@ private:
     //分析阶段
     RESULT_CODE process_read();//解析请求
     bool process_write(RESULT_CODE);//填写应答
+    bool writeByShared();
+    bool writeBycommen();
 public:
     RESULT_CODE parse_request_line(char *text);//解析请求行
     RESULT_CODE parse_headers(char *text);//解析请求头
@@ -99,6 +104,8 @@ public:
     bool add_status_line(int status,const char *title);//增加状态码和状态类型
     bool add_content_length(int content_length);//内容长度
     bool add_linger();//连接类型
+    bool add_content_type(const char* type); //添加响应类型
+     
     bool add_blank_line();
     bool add_headers(int content_len);
 public:
@@ -120,13 +127,17 @@ private:
     char *m_url;//文件名+路径
     char *m_version;//当前http 版本号
     char *m_host;//主机名
+    char *m_encode_method;//所支持首选压缩方式
+    char* m_user_agent;  //用户代理
+    std::vector<char*> m_accept_types;//用户接受类型
+    std::vector<char*> m_accept_language;//所支持得语言类型
     int m_content_length;//请求消息长度
     bool m_link;//保持连接
     char *m_file_address;//客户请求文件 被mmap到内存中的地址
     struct stat m_file_stat;//目标文件状态
 
     struct iovec m_lv[2];
-    int m_iv_count;
+    ssize_t m_iv_count;
 };
 
 #endif // HTTP_CONN_H

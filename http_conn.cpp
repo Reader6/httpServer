@@ -106,8 +106,6 @@ http_conn::RESULT_CODE http_conn::process_read()//main state mache
                 default:{
                     return INTERNAL_ERROR;
                 }
-
-
         }
 
      }
@@ -227,6 +225,11 @@ bool http_conn::add_linger()
     return add_response("Connection:%s\r\n",(m_link==true)?"keep-alive":"close");
 }
 
+bool http_conn::add_content_type(const char* type)
+{
+    return add_response("Content-Type: %s;charset=utf-8\r\n", type);
+}
+
 bool http_conn::add_blank_line()
 {
     return add_response("%s","\r\n");
@@ -235,6 +238,7 @@ bool http_conn::add_blank_line()
 bool http_conn::add_headers(int content_len)
 {
     add_content_length(content_len);
+    add_content_type("text/html");
     add_linger();
     add_blank_line();
 }
@@ -259,39 +263,95 @@ bool http_conn::read()
         }
     return true;
 }
-
-bool http_conn::write()
-{
-    int temp=0;
-    int bytes_have_send=0;
-    int bytes_to_send=m_write_idx;
-    if(bytes_to_send==0){
-        modfd(m_epolled,m_socked,EPOLLIN);
+//文件较小通过writev发送
+bool http_conn::writeByShared() {
+    int temp = 0;
+    int bytes_have_send = 0;
+    int bytes_to_send = 0;
+    for (int i = 0; i < m_iv_count; i++) {
+        bytes_to_send += m_lv[i].iov_len;
+    }
+    if (bytes_to_send == 0) {
+        modfd(m_epolled, m_socked, EPOLLIN);
         init_state();
         return true;
     }
     while (1) {
-        temp=writev(m_socked,m_lv,m_iv_count);
-        if(temp<=0){
-            if(errno==EAGAIN){
-                modfd(m_epolled,m_socked,EPOLLOUT);
+        if (temp <= 0) {
+            if (errno == EAGAIN) {
+                modfd(m_epolled, m_socked, EPOLLOUT);
                 return true;
             }
             unmap();
             return false;
         }
-        bytes_to_send-=temp;
-        bytes_have_send+=temp;
-        if(bytes_to_send<bytes_have_send){
+        bytes_to_send -= temp;
+        bytes_have_send += temp;
+        if (bytes_to_send < 0) {
             unmap();
             //有修改
-            if(m_link){
+            if (m_link) {
                 init_state();
-                modfd(m_epolled,m_socked,EPOLLIN);
+                modfd(m_epolled, m_socked, EPOLLIN);
                 return true;
             }
-            else{
-                modfd(m_epolled,m_socked,EPOLLIN);
+            else {
+                modfd(m_epolled, m_socked, EPOLLIN);
+                return false;
+            }
+        }
+    }
+}
+//大文件通过writev发送
+bool http_conn:: writeBycommen() {
+    int filefd = open(m_real_file,O_RDONLY);
+    assert(filefd > 0);
+    struct stat stat_buf;
+    fstat(filefd, &stat_buf);
+    size_t have_to_send = stat_buf.st_size;
+    off_t had_Send = 0;
+    while (had_Send<have_to_send)
+    {
+        sendfile(m_socked, filefd, &had_Send, have_to_send);
+    }
+    close(filefd);
+    return true;
+}
+bool http_conn::write()
+{
+    int temp = 0;
+    int bytes_have_send = 0;
+    int bytes_to_send = 0;
+    for (int i = 0; i < m_iv_count; i++) {
+        bytes_to_send +=int( m_lv[i].iov_len);
+    }
+    if (bytes_to_send == 0) {
+        modfd(m_epolled, m_socked, EPOLLIN);
+        init_state();
+        return true;
+    }
+    while (1) {
+        temp=writev(m_socked, m_lv, m_iv_count);
+        if (temp <= 0) {
+            if (errno == EAGAIN) {
+                modfd(m_epolled, m_socked, EPOLLOUT);
+                return true;
+            }
+            unmap();
+            return false;
+        }
+        bytes_to_send -= temp;
+        bytes_have_send += temp;
+        if (bytes_to_send <= 0) {
+            unmap();
+            //有修改
+            if (m_link) {
+                init_state();
+                modfd(m_epolled, m_socked, EPOLLIN);
+                return true;
+            }
+            else {
+                modfd(m_epolled, m_socked, EPOLLIN);
                 return false;
             }
         }
@@ -360,41 +420,6 @@ http_conn::RESULT_CODE http_conn::parse_request_line(char *text){
 
      m_check_state=CHEACK_STATE_HEADER;
      return NO_REQUEST;
-
-  /*
-    m_url=strpbrk(text,"/"); //取得\t的位置  在text中寻找第一个匹配\t的元素
-     if(!m_url){
-         return BAD_REQUEST;    //如果没有寻找到 说明格式错误
-     }
-
-     *m_url++='\0'; //前面分隔 获得空格指向的下一个位置
-     char *method=text;//text;
-     if(strcasecmp(method,"GET")==0){
-         m_quest_method=GET;//如果请求方式为GET
-     }
-     else {
-         return BAD_REQUEST;//暂时只支持GET
-     }
-     m_url+=strspn(m_url,"\t");//消除连续的空格
-     m_version=strpbrk(m_url,"\t");//然后在寻找下一个"\t"
-     if (!m_version){
-         return BAD_REQUEST;
-     }
-     *m_version++='\0';
-     m_version+=strspn(m_version,"\t");
-     if(strcasecmp(m_version,"HTTP/1.1")!=0){
-         return BAD_REQUEST;
-     }
-     if(strcasecmp_l(m_url,"http://",locale_t(7))==0){
-        m_url+=7;
-        m_url=strchr(m_url,'/');
-     }
-     if(!m_url || m_url[0]!='/'){
-         return BAD_REQUEST;
-     }
-     m_check_state=CHEACK_STATE_HEADER;
-     return NO_REQUEST;
-     */
 }
 
 http_conn::RESULT_CODE http_conn::parse_headers(char *text)
@@ -423,6 +448,26 @@ http_conn::RESULT_CODE http_conn::parse_headers(char *text)
         text+=strspn(text," ");
         m_host=text;
     }
+    else if (strncasecmp(text,"Accept-Encoding:",16) == 0) {
+        text += 16;
+        text += strspn(text, " ");
+        m_encode_method= text;
+    }
+    else if (strncasecmp(text, "User-Agent:", 11) == 0) {
+        text += 11;
+        text += strspn(text, " ");
+        m_user_agent = text;
+    }
+    else if (strncasecmp(text, "Accept:", 7) == 0) {
+        text += 7;
+        text += strspn(text, " ");
+        m_accept_types.push_back(text);
+    }
+    else if (strncasecmp(text, "Accept-Language:",16) == 0) {
+        text += 16;
+        text += strspn(text, " ");
+        m_accept_language.push_back(text);
+    }
     else{
         printf("oop! unknow header %s\n",text);
 
@@ -445,7 +490,7 @@ http_conn::RESULT_CODE http_conn::do_request()
     strcpy(m_real_file,doc_root);
     size_t len=strlen(doc_root);
    
-    strncpy(m_real_file+len,m_url,FILENAME_LEN-len)-1;
+    strncpy(m_real_file+len,m_url,FILENAME_LEN-len-1);
     printf("m_real_file %s \n", m_real_file);
     if(stat(m_real_file,&m_file_stat)<0){
         return NO_RESOURCE;
