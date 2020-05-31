@@ -30,6 +30,7 @@ public:
 		const string& pwd, const string& db,
 		size_t port, const string& unix_socket,
 		size_t client_flag);
+	MYSQL* get_conn();
 	~sql_conn();
 
 
