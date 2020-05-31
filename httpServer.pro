@@ -3,18 +3,24 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 SOURCES += \
-        http_conn.cpp \
+    commen.cpp \
+    easylogging++.cc \
+    httpServer.cpp \
+    http_conn.cpp \
         locker.cpp \
-        main.cpp \
-        test.cpp
+    main.cpp
 
 HEADERS += \
+    commen.h \
+    easylogging++.h \
+    httpServer.h \
     http_conn.h \
     locker.h \
-    test.h \
     threadpool.h\
 QMAKE_CFLAGS  += -lpthread
 LIBS +=-lpthread
 
+
 DISTFILES += \
+    my_log.conf \
     var/www/index.html

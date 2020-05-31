@@ -16,6 +16,7 @@
 #include"threadpool.h"
 #include"http_conn.h"
 #include"commen.h"
+#include "easylogging++.h"
 using namespace std;
 class httpServer
 {
@@ -26,15 +27,16 @@ public:
 	~httpServer();
 
 private:
-	size_t m_port;
-	const char* m_ip;
+    size_t m_port;                          //端口
+    const char* m_ip;                       //ip
 	vector<http_conn> users;
 	size_t user_count;
 	threadpool<http_conn>* pool;
-	epoll_event events[MAX_EVENT_NUMBER];
+    epoll_event events[MAX_EVENT_NUMBER];  //最大连接数
 	int epollfd;
 	size_t m_listenfd;
-	size_t m_threads;//�߳���
+	size_t m_threads;//线程数
 	size_t m_log_level;
 };
 
+ 

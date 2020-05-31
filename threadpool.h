@@ -5,6 +5,7 @@
 #include<iostream>
 #include<pthread.h>
 #include"locker.h"
+#include"easylogging++.h"
 template <typename T>
 class threadpool{
 public:
@@ -32,14 +33,17 @@ threadpool<T>::threadpool(int thread_number, int max_requests):m_thread_number(t
     }
     m_threads=new pthread_t[m_thread_number];
     if(!m_threads){
+        LOG(ERROR) << "线程创建时，分配内存出现错误";
         throw std::exception();
     }
     for(int i=0;i<thread_number;++i){
-        printf("create thr %dth thread\n",i);
+        LOG(DEBUG) << "create thr " << i << "th thread";
+        //printf("create thr %dth thread\n",i);
         if(pthread_create(m_threads+i,NULL,worker,this)!=0){
             delete []m_threads;
             throw std::exception();
         }
+        //pthread_join()函数的替代函数，可回收创建时detachstate属性设置为PTHREAD_CREATE_JOINABLE的线程的存储空间
         if(pthread_detach(m_threads[i])){
             delete []m_threads;
             throw std::exception();
@@ -54,19 +58,20 @@ template<typename T> threadpool<T>::~threadpool()
 template<typename T>
 bool threadpool<T>::append(T *request)
 {
-
     m_queuelocker.lock();
     if(m_workqueue.size()>m_max_requests){
         m_queuelocker.unlock();
+        LOG(DEBUG) << "请求数过多，暂时不能服务";
         return false;
     }
     m_workqueue.push_back(request);
     m_queuelocker.unlock();
-    m_queuestat.post();
+    m_queuestat.post();                   //生产者消费者问题
+    LOG(DEBUG) << "追加请求成功";
     return  true;
 }
 template<typename T>
-void *threadpool<T>::worker(void *arg)
+void *threadpool<T>::worker(void *arg)  //线程执行函数
 {
        threadpool *pool=(threadpool*)arg;
        pool->run();
@@ -75,12 +80,12 @@ void *threadpool<T>::worker(void *arg)
 template<typename T>
 void threadpool<T>::run()
 {
-
     while (!m_stop) {
         m_queuestat.wait();
         m_queuelocker.lock();
         if(m_workqueue.empty()){
             m_queuelocker.unlock();
+            LOG(DEBUG) << "请求队列为空，继续重新等待";
             continue;
         }
         T *request=m_workqueue.front();
@@ -88,7 +93,8 @@ void threadpool<T>::run()
         m_queuelocker.unlock();
 
         if(!request){
-            std::cout << "warn 当前没有请求" << std::endl;
+            LOG(WARNING) << "当前没有请求，继续重新等待";
+            //std::cout << "warn 当前没有请求" << std::endl;
             continue;
         }
         request->process();

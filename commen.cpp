@@ -1,18 +1,18 @@
 #include "commen.h"
 int setnonblacking(int fd)
 {
-    int old_option = fcntl(fd, F_GETFL);//ETÄ£Ê½  Ò»´Î¶ÁÈ¡
-    int new_option = old_option | O_NONBLOCK;//·Ç¶ÂÈû
-    fcntl(fd, F_SETFL, new_option);//Ìí¼ÓĞÂ·½·¨
-    return old_option;//·µ»ØÖ®Ç°ÉèÖÃ
+    int old_option = fcntl(fd, F_GETFL);//ETæ¨¡å¼  ä¸€æ¬¡è¯»å–
+    int new_option = old_option | O_NONBLOCK;//éå µå¡
+    fcntl(fd, F_SETFL, new_option);//æ·»åŠ æ–°æ–¹æ³•
+    return old_option;//è¿”å›ä¹‹å‰è®¾ç½®
 
 };
 void addfd(int epollfd, int fd, bool one_shot)
 {
     epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;//×¢²á½ÓÊÜ  ¹ÒÆğ ÊÂ¼ş
-    if (one_shot) {//·ÀÖ¹¶à¸öÏß³ÌÍ¬Ê±´¦ÀíÒ»¸öÁ¬½Ó
+    event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;//æ³¨å†Œæ¥å—  æŒ‚èµ· äº‹ä»¶
+    if (one_shot) {//é˜²æ­¢å¤šä¸ªçº¿ç¨‹åŒæ—¶å¤„ç†ä¸€ä¸ªè¿æ¥
         event.events |= EPOLLONESHOT;
     }
     epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
@@ -42,4 +42,4 @@ void show_error(int connfd, const char* info) {
     printf("%s", info);
     send(connfd, info, strlen(info), 0);
     close(connfd);
-}
+} 

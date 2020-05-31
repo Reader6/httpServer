@@ -1,5 +1,5 @@
 #pragma once
-//ÉèÖÃ·Ç×èÈû
+//è®¾ç½®éé˜»å¡
 #include<unistd.h>
 #include<signal.h>
 #include<sys/types.h>
@@ -25,4 +25,4 @@ void addfd(int epollfd, int fd, bool one_shot);
 void removefd(int epolled, int fd);
 void modfd(int epolled, int fd, int ev);
 void addsig(int sig, void (handler)(int), bool restart=true );
-void show_error(int connfd, const char* info);
+void show_error(int connfd, const char* info); 
