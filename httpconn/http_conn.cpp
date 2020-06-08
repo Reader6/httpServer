@@ -1,26 +1,16 @@
 #include "http_conn.h"
 #include"commen/commen.h"
-const char* ok_200_title = "OK";
-const char* error_400_title = "Bad Request";
-const char* error_400_form = "Your request has bad syntax or is in herently Impossible to staticfy.\n";
-const char* error_403_title = "Forbidden";
-const char* error_403_form = "You do not have permission to get file from this server.\n";
-const char* error_404_title = "Not Found";
-const char* error_404_form = "The requested file was not found on this server.\n";
-const char* error_500_title = "Internal Error";
-const char* error_500_form = "There was an unusual problem serving the requestd file\n";
 
-const char* doc_root = "/root/www";//网页根目录
 
 int http_conn::m_user_count = 0;
 int http_conn::m_epolled = -1;
 void http_conn::close_conn(bool real_close) {
-	printf("real close %d ",real_close);
+	
 	if (real_close && (m_socked != -1)) {
 		removefd(m_epolled, m_socked);
+		std::cout<<"socket:"<<m_socked<<" host:"<<m_host<<" close connection"<<std::endl;
 		m_socked = -1;
 		m_user_count--;
-		printf("yes\n");
 	}
 }
 
@@ -28,17 +18,22 @@ void http_conn::process()
 {
 
 	RESULT_CODE read_ret = process_read();
+	
 	if (read_ret == NO_REQUEST) {
 
 		modfd(m_epolled, m_socked, EPOLLIN);
 		//异常
 		return;
 	}
+	
 	bool write_ret = process_write(read_ret);
+	
 	if (!write_ret) {
-		close_conn();
+
+	   close_conn();
 		
 	}
+
 	modfd(m_epolled, m_socked, EPOLLOUT);
 	printf("finished one serverice");
 
@@ -119,39 +114,39 @@ bool http_conn::process_write(http_conn::RESULT_CODE ret)
 {
 	switch (ret) {
 	case INTERNAL_ERROR: {
-		add_status_line(500, error_500_title);
-		add_headers(strlen(error_500_form));
-		if (!add_content(error_500_form)) {
+		add_status_line(500,commen::error_500_title);
+		add_headers(strlen(commen::error_500_form));
+		if (!add_content(commen::error_500_form)) {
 			return false;
 		}
 		break;
 	}
 	case BAD_REQUEST: {
-		add_status_line(400, error_400_title);
-		add_headers(strlen(error_400_form));
-		if (!add_content(error_400_form)) {
+		add_status_line(400, commen::error_400_title);
+		add_headers(strlen(commen::error_400_form));
+		if (!add_content(commen::error_400_form)) {
 			return false;
 		}
 		break;
 	}
 	case NO_RESOURCE: {
-		add_status_line(404, error_404_title);
-		add_headers(strlen(error_404_form));
-		if (!add_content(error_404_form)) {
+		add_status_line(404,commen::error_404_title);
+		add_headers(strlen(commen::error_404_form));
+		if (!add_content(commen::error_404_form)) {
 			return false;
 		}
 		break;
 	}
 	case FORBIDDEN_REQUEST: {
-		add_status_line(400, error_403_title);
-		add_headers(strlen(error_403_form));
-		if (!add_content(error_403_form)) {
+		add_status_line(400, commen::error_403_title);
+		add_headers(strlen(commen::error_403_form));
+		if (!add_content(commen::error_403_form)) {
 			return false;
 		}
 		break;
 	}
 	case FILE_REQUEST: {
-		add_status_line(200, ok_200_title);
+		add_status_line(200,commen::ok_200_title);
 		if (m_file_stat.st_size != 0) {
 			add_headers(m_file_stat.st_size);
 			m_lv[0].iov_base = m_write_buf;
@@ -215,17 +210,17 @@ bool http_conn::add_content(const char* content)
 
 bool http_conn::add_status_line(int status, const char* title)
 {
-	return add_response("%s%d%s\r\n", "HTTP/1.1", status, title);
+	return add_response("%s %d %s\r\n", "HTTP/1.1", status, title);
 }
 
 bool http_conn::add_content_length(int content_length)
 {
-	return add_response("Content-Length:%d\r\n", content_length);
+	return add_response("Content-Length: %d\r\n", content_length);
 }
 
 bool http_conn::add_linger()
 {
-	return add_response("Connection:%s\r\n", (m_link == true) ? "keep-alive" : "close");
+	return add_response("Connection: %s\r\n", (m_link == true) ? "keep-alive" : "close");
 }
 
 bool http_conn::add_content_type(const char* type)
@@ -241,8 +236,8 @@ bool http_conn::add_blank_line()
 bool http_conn::add_headers(int content_len)
 {
 	add_content_length(content_len);
-	add_content_type("application/json");
-	//add_linger();
+	//add_content_type("application/json");
+	add_linger();
 	add_blank_line();
 }
 bool http_conn::read()
@@ -446,8 +441,8 @@ http_conn::RESULT_CODE http_conn::parse_content(char* text)
 
 http_conn::RESULT_CODE http_conn::do_request()
 {
-	strcpy(m_real_file, doc_root);
-	size_t len = strlen(doc_root);
+	strcpy(m_real_file,commen::doc_root);
+	size_t len = strlen(commen::doc_root);
 
 	strncpy(m_real_file + len, m_url, FILENAME_LEN - len - 1);
 	printf("m_real_file %s \n", m_real_file);

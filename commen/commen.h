@@ -26,3 +26,20 @@ void removefd(int epolled, int fd);
 void modfd(int epolled, int fd, int ev);
 void addsig(int sig, void (handler)(int), bool restart=true );
 void show_error(int connfd, const char* info); 
+
+namespace commen{
+ 	static char* ok_200_title="OK";
+
+
+	static char* error_400_title = "Bad Request";
+	static char* error_400_form = "Your request has bad syntax or is in herently Impossible to staticfy.\n";
+	static char* error_403_title = "Forbidden";
+
+	static char* error_403_form = "You do not have permission to get file from this server.\n";
+	static char* error_404_title = "Not Found";
+	static char* error_404_form = "The requested file was not found on this server.\n";
+	static char* error_500_title = "Internal Error";
+       	static	char* error_500_form = "There was an unusual problem serving the requestd file\n";
+
+	static char* doc_root = "/root/www";//网页根目录
+}

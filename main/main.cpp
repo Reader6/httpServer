@@ -55,7 +55,8 @@ int main(int argc, char* argv[])
 
 
 	int port = 80;
-	httpServer* Server = new httpServer(port, ip, 2, 0);
+	//端口号 ip地址 线程数
+	httpServer* Server = new httpServer(port, ip, 64, 0);
 	Server->event_listen();
 	Server->event_loop();
 	return 0;

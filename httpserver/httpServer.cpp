@@ -31,8 +31,8 @@ void httpServer::event_listen()
 
     m_listenfd = socket(PF_INET, SOCK_STREAM, 0);
     assert(m_listenfd > 0);
-    //struct linger tmp = { 1,0 };//优雅关闭，立即关闭
-   // setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
+    struct linger tmp = { 0,1 };//优雅关闭，立即关闭
+    setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
     int ret = 0;
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
@@ -44,7 +44,6 @@ void httpServer::event_listen()
     ret = listen(m_listenfd, 50);
     assert(ret >= 0);
     epollfd = epoll_create(50);
-    //   assert(epollfd==-1);
     addfd(epollfd, m_listenfd, false);
     http_conn::m_epolled = epollfd;
 
@@ -71,7 +70,7 @@ void httpServer::event_loop()
                 socklen_t client_addrlenth = sizeof(client_address);
                 int connfd = accept(m_listenfd, (sockaddr*)&client_address, &client_addrlenth);
                 LOG(INFO)    << "***** 用户连接：  *****";
-                LOG(INFO) << "connfd is " << &connfd << "  address is " << &client_address;
+                LOG(INFO) << "connfd is " << &connfd ;
 
                 if (connfd < 0) {
                     LOG(WARNING) << "连接新用户出错：" << &errno;
@@ -96,7 +95,7 @@ void httpServer::event_loop()
                     pool->append(&users[sockfd]);//将该套接字追到请求队列中
                 }
                 else {
-                    LOG(WARNING) << "读取用户套接字失败，关闭该套接字";
+                    LOG(WARNING) << "对方发送RST,请求关闭连接";
                     users[sockfd].close_conn();
                 }
             }
@@ -107,6 +106,9 @@ void httpServer::event_loop()
                 }
             }
             else {
+			
+                    LOG(WARNING) << "未知异常";
+
             }
         }
     }
