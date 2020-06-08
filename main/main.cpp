@@ -2,9 +2,10 @@
 
 #include "httpserver/httpServer.h"
 #include "mysqldb/mysql_guard.h"
+#include "log/easylogging++.h"
 using namespace std;
 
-//INITIALIZE_EASYLOGGINGPP
+INITIALIZE_EASYLOGGINGPP
 
 int main(int argc, char* argv[])
 {
@@ -48,9 +49,9 @@ int main(int argc, char* argv[])
 	};
 	*/
 	//加载日志配置文件
-	//el::Configurations conf("/root/xhmelody/qreader/httpseverLog/httpServer-master/my_log.conf");
-	//el::Loggers::reconfigureAllLoggers(conf);
-	const char* ip = "127.0.0.1";
+	el::Configurations conf("my_log.conf");
+	el::Loggers::reconfigureAllLoggers(conf);
+	const char* ip = "0.0.0.0";
 
 
 	int port = 80;

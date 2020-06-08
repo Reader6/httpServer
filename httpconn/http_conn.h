@@ -21,7 +21,7 @@
 #include<errno.h>
 #include<iostream>
 #include<vector>
-//#include"log/easylogging++.h"
+#include"log/easylogging++.h"
 class http_conn
 {
 public:
@@ -86,8 +86,6 @@ private:
 	//分析阶段
 	RESULT_CODE process_read();//解析请求
 	bool process_write(RESULT_CODE);//填写应答
-	bool writeByShared();
-	bool writeBycommen();
 public:
 	RESULT_CODE parse_request_line(char* text);//解析请求行
 	RESULT_CODE parse_headers(char* text);//解析请求头
@@ -95,7 +93,6 @@ public:
 	RESULT_CODE do_request();//做出应答
 	char* get_line() {
 		return m_read_buf + m_start_line;
-		//LOG(DEBUG) << "读取出一行 " << m_read_buf;
 	}
 	LINE_STATUS parse_line(); //分析读取每一行
 	//填充阶段

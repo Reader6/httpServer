@@ -15,10 +15,12 @@ const char* doc_root = "/root/www";//网页根目录
 int http_conn::m_user_count = 0;
 int http_conn::m_epolled = -1;
 void http_conn::close_conn(bool real_close) {
+	printf("real close %d ",real_close);
 	if (real_close && (m_socked != -1)) {
 		removefd(m_epolled, m_socked);
 		m_socked = -1;
 		m_user_count--;
+		printf("yes\n");
 	}
 }
 
@@ -35,6 +37,7 @@ void http_conn::process()
 	bool write_ret = process_write(read_ret);
 	if (!write_ret) {
 		close_conn();
+		
 	}
 	modfd(m_epolled, m_socked, EPOLLOUT);
 	printf("finished one serverice");
@@ -238,8 +241,8 @@ bool http_conn::add_blank_line()
 bool http_conn::add_headers(int content_len)
 {
 	add_content_length(content_len);
-	//add_content_type("text/html");
-	add_linger();
+	add_content_type("application/json");
+	//add_linger();
 	add_blank_line();
 }
 bool http_conn::read()
@@ -391,7 +394,7 @@ http_conn::RESULT_CODE http_conn::parse_headers(char* text)
 		text += 11;
 		text += strspn(text, " ");
 		if (strcasecmp(text, "keep-alive") == 0) {
-			m_link = true;
+			m_link = false;
 		}
 	}
 	else if (strncasecmp(text, "Content-Length:15", 15) == 0) {

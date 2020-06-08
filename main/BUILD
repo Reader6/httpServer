@@ -4,6 +4,8 @@ cc_binary(
 	deps = [
 		"//httpserver:httpserver_lib",
 		"//mysqldb:mysql_lib",
-	],
+		"//log:log_lib",
+		],
+
 		
 )

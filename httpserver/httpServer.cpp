@@ -11,17 +11,16 @@ httpServer::httpServer(const size_t& port, char const* ip, const size_t& nthread
     {
         users.resize(MAX_FD);//预先定义vector内存大小
         pool = new threadpool<http_conn>(nthreads); //分配线程池大小
-       // LOG(DEBUG) << "*****  服务器启动  *****";
-       // LOG(DEBUG) << "服务器的信息：";
-       // LOG(DEBUG) << "地址：" << ip << "  端口：" << port << "  启动线程：" << nthreads;
+        LOG(DEBUG) << "*****  服务器启动  *****";
+        LOG(DEBUG) << "服务器的信息：";
+        LOG(DEBUG) << "地址：" << ip << "  端口：" << port << "  启动线程：" << nthreads;
     }
     catch (const std::exception&)
     {
         if (pool) {
             delete pool;
         }
-       // LOG(ERROR)   << "***** 线程池分配内存错误  *****";
-        //cout << "内存错误" << endl;
+        LOG(ERROR)   << "***** 线程池分配内存错误  *****";
         throw "内存错误";
     }
     user_count = 0;
@@ -32,8 +31,8 @@ void httpServer::event_listen()
 
     m_listenfd = socket(PF_INET, SOCK_STREAM, 0);
     assert(m_listenfd > 0);
-    struct linger tmp = { 1,0 };//优雅关闭，立即关闭
-    setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
+    //struct linger tmp = { 1,0 };//优雅关闭，立即关闭
+   // setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
     int ret = 0;
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
@@ -50,7 +49,7 @@ void httpServer::event_listen()
     http_conn::m_epolled = epollfd;
 
     //这里直接打印到终端，而不用记录
-    //LOG(DEBUG) << "*****  服务器监听成功！！！  *****";
+    LOG(DEBUG) << "*****  服务器监听成功！！！  *****";
     
 }
 
@@ -60,8 +59,8 @@ void httpServer::event_loop()
         int number = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
 
         if ((number < 0) && (errno != EINTR)) {
-        //LOG(ERROR) << "epoll failure";
-            //这里应该为警告，然后continue，从新等待监听
+        	
+		LOG(ERROR) << "epoll failure";
             break;
         }
         for (int i = 0; i < number; ++i) {
@@ -71,35 +70,33 @@ void httpServer::event_loop()
                 struct sockaddr_in client_address;
                 socklen_t client_addrlenth = sizeof(client_address);
                 int connfd = accept(m_listenfd, (sockaddr*)&client_address, &client_addrlenth);
-               // LOG(INFO)    << "***** 用户连接：  *****";
-               // LOG(INFO) << "connfd is " << &connfd << "  address is " << &client_address;
+                LOG(INFO)    << "***** 用户连接：  *****";
+                LOG(INFO) << "connfd is " << &connfd << "  address is " << &client_address;
 
                 if (connfd < 0) {
-                 //   LOG(WARNING) << "连接新用户出错：" << &errno;
+                    LOG(WARNING) << "连接新用户出错：" << &errno;
                     continue;
                 }
                 if (http_conn::m_user_count > MAX_FD) {
-                  //  LOG(WARNING) << "internal server busy, the new request will close";
-                   // LOG(WARNING) << "close connfd is " << &connfd << "  address is " << &client_address;
+                    LOG(WARNING) << "internal server busy, the new request will close";
+                    LOG(WARNING) << "close connfd is " << &connfd << "  address is " << &client_address;
                     show_error(connfd, "internal serverbusy");
                     continue;
                 }
                 users[connfd].init(connfd, client_address);
-               // LOG(DEBUG) << "用户初始化成功";
             }
             //tcp连接被对方关闭，或者对方关闭了写操作
             //挂起，比如管道的写端被关闭，读端将会收到这个信号
             //错误
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
-               // LOG(DEBUG) << "套接字出现EPOLLRDHUP | EPOLLHUP | EPOLLERR三种情况之一，关闭套接字";
-                users[sockfd].close_conn();
+                    users[sockfd].close_conn();
             }
             else if (events[i].events & (EPOLLIN)) {
                 if (users[sockfd].read()) {
                     pool->append(&users[sockfd]);//将该套接字追到请求队列中
                 }
                 else {
-                 //   LOG(WARNING) << "读取用户套接字失败，关闭该套接字";
+                    LOG(WARNING) << "读取用户套接字失败，关闭该套接字";
                     users[sockfd].close_conn();
                 }
             }

@@ -12,11 +12,10 @@
 #include<stdlib.h>
 #include<cassert>
 #include<sys/epoll.h>
-//#include"lock/locker.h"
 #include"threadpool/threadpool.h"
 #include"httpconn/http_conn.h"
 #include"commen/commen.h"
-//#include "easylogging++.h"
+#include "log//easylogging++.h"
 using namespace std;
 class httpServer
 {
