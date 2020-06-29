@@ -15,6 +15,13 @@ int main(int argc, char* argv[])
 		mysql_guard sql_guard;
 		try
 		{
+            DB_Connector *db_conn = new DB_Connector();
+
+            char TableName[] = "User_info";
+            char ColumnName[] = "user_name, user_info, user_phone, user_emil, user_id";
+            string name = "user_name";
+            db_conn->Select(guard(), TableName, ColumnName, "user_id",  "1");
+            /*
 			char temp[400];
 			char *tbname = "user";
 			int rt;
@@ -38,7 +45,7 @@ int main(int argc, char* argv[])
 				cout<<"select * from "<<tbname<<": error !: "<<mysql_error(sql_guard())<<endl;
 
 			}
-		
+		*/
 		}
 		catch (string& error_msg)
 		{
