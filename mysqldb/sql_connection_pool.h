@@ -11,7 +11,7 @@ class sql_connection_pool
 public:
 	sql_connection_pool(int count);
 	~sql_connection_pool();
-	//»ñµÃ×îÐ¡Á¬½Ó
+	//¿¿¿¿¿¿
 	pair<sql_conn*, int>* get_sql_connetion_pool() {
 
 		if (m_sql_conn_pool->size()) {
@@ -20,23 +20,22 @@ public:
 			m_sql_conn_pool->pop();
 			return i;
 		}
-		cout << "Îª¸ÃÁ¬½Ó·ÖÅäÊý¾Ý¿âÁ¬½Ó³ØÊ§°Ü" << endl;
+		cout <<"¿¿¿¿¿¿¿¿¿¿"<< endl;
 		return NULL;
 	}
-	//½«Á¬½Ó·µ»Ø ²¢ÅÅÐò
+	//¿¿¿¿¿¿
 	void push_sql_connetion_pool(pair<sql_conn*, int>*i) {
 		i->second -= 1;
 		m_sql_conn_pool->push(i);
 	}
 
-	
-
 private:
-
+	//¿¿¿
 	void init_sql_pool();
-	//³õÊ¼»¯´´½¨Á¬½Ó³Ø
 
 private:
+	
+	//¿¿¿¿¿
 	priority_queue<pair<sql_conn*, int>*>*m_sql_conn_pool;
 
 private:

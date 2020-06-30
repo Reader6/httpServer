@@ -12,15 +12,13 @@ class sql_conn
 {
 public:
 	/*
-		¹¹Ôìº¯Êı ¹¹½¨Á¬½Ó¶ÔÏó
-		host:Ö÷»ú
-		user:ÓÃ»§
-		pwd:ÃÜÂë
-		db:Êı¾İ¿â
-		port:¶Ë¿Ú
-		unix_socket:ÊÇ·ñÊ¹ÓÃsocket»úÖÆµÇÂ¼
-		client_Flag Á¬½Ó±êÖ¾
-
+	
+		host:¿¿
+		user:¿¿
+		pwd:¿¿
+		db:¿¿¿
+		port:¿¿
+	
 	*/
 	sql_conn(const string& host, const string& user,
 		const string& pwd, const string& db,
@@ -35,5 +33,5 @@ public:
 
 
 private:
-	MYSQL* mysql_conn;//Êı¾İ¿âÁ¬½Ó
+	MYSQL* mysql_conn;//¿¿¿¿
 };

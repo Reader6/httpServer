@@ -13,13 +13,28 @@ bool sql_conn::connect_Db(const string& host, const string& Suser, const string&
 	char user[] = "root";
 	char password[] = "root";
 	char database[] = "mysql";
-	if (!mysql_real_connect(mysql_conn, server, user, password, database, 0, NULL, 0)) {
-		cout << "database connetion failed " << mysql_error(mysql_conn) << endl;
-		return true;
-	}
-	cout << "database connection sucesss" << endl;
-}
+	char *query;
+	mysql_conn = mysql_init((MYSQL *)0);
+	int rt;
+	if (mysql_conn != NULL  &&  mysql_real_connect(mysql_conn, server, user, password, database, 0, NULL, 0)) {
+		if(!mysql_select_db(mysql_conn,database)) {
+		cout<<"databse connection sucess "<<endl;
+		mysql_conn->reconnect = 1;
+		query = "set names \'utf8\'";
+		rt = mysql_real_query(mysql_conn,query,strlen(query));
+		if(rt){
+			cout<<"Error making query " << mysql_error(mysql_conn)<<endl;
+		}else{
 
+			cout<<"querry sucess"<<endl;
+		
+		}
+		}	
+		return true;
+	}else{
+		cout << "database connection failed" << endl;
+	}
+}
 MYSQL* sql_conn::get_conn()
 {
 
@@ -30,5 +45,5 @@ sql_conn::~sql_conn()
 {
 
 	mysql_close(mysql_conn);
-	cout << "Îö¹¹³É¹¦" << endl;
+	cout << "¿¿¿¿¿¿¿" << endl;
 }

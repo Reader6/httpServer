@@ -22,6 +22,7 @@
 #include<iostream>
 #include<vector>
 #include"log/easylogging++.h"
+#include<unordered_map>
 class http_conn
 {
 public:
@@ -91,6 +92,8 @@ public:
 	RESULT_CODE parse_headers(char* text);//解析请求头
 	RESULT_CODE parse_content(char* text);//解析请求内容
 	RESULT_CODE do_request();//做出应答
+	RESULT_CODE parse_args(char* text);
+
 	char* get_line() {
 		return m_read_buf + m_start_line;
 	}
@@ -106,6 +109,8 @@ public:
 
 	bool add_blank_line();
 	bool add_headers(int content_len);
+
+
 public:
 	static int m_epolled;//epoll描述符
 	static int m_user_count;//用户总量
@@ -133,9 +138,12 @@ private:
 	bool m_link;//保持连接
 	char* m_file_address;//客户请求文件 被mmap到内存中的地址
 	struct stat m_file_stat;//目标文件状态
-
+	char * m_arg; //参数
 	struct iovec m_lv[2];
 	ssize_t m_iv_count;
+	std::unordered_map<std::string,std::string>m_args;
+
+	
 };
 
 #endif // HTTP_CONN_H

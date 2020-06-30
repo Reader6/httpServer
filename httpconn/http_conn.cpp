@@ -371,8 +371,34 @@ http_conn::RESULT_CODE http_conn::parse_request_line(char* text) {
 	if (!m_url || m_url[0] != '/') {
 		return BAD_REQUEST;
 	}
-
+	m_arg = strpbrk(m_url, "?");
+	if(m_arg) {
+		*m_arg++ = '\0';
+		parse_args(m_arg); //去除？部分
+		
+	}else{
+		std::cout<<m_url<<" :没有参数传递"<<std::endl;
+	}
 	m_check_state = CHEACK_STATE_HEADER;
+	
+	return NO_REQUEST;
+}
+http_conn::RESULT_CODE http_conn::parse_args(char *text) {
+	char * m_idx = text;
+	char * m_odx = text;
+
+	while(m_idx){
+		
+		text = strpbrk(text,"&");
+		if(text)*text++ = '\0';
+		if(m_idx) {
+			m_odx = strpbrk(m_idx,"=");
+			*m_odx++ ='\0';
+			m_args[m_idx]=m_odx;
+		std::cout<<m_idx<<":"<<m_odx<<std::endl;
+		}	
+		m_idx = text;
+	}
 	return NO_REQUEST;
 }
 
