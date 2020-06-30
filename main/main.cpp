@@ -1,16 +1,24 @@
 #include <iostream>
-
+/*
 #include "httpserver/httpServer.h"
 #include "mysqldb/mysql_guard.h"
 #include "log/easylogging++.h"
+*/
+#include"../httpserver/httpServer.h"
+#include "../mysqldb/mysql_guard.h"
+#include <mysql/mysql.h>
+#include <string>
+#include "../mysqldb/testmysql.h"
 using namespace std;
+
 
 INITIALIZE_EASYLOGGINGPP
 
+
+
 int main(int argc, char* argv[])
 {
-/*
-	{
+	/*{
 		mysql_guard sql_guard;
 		try
 		{
@@ -61,4 +69,3 @@ int main(int argc, char* argv[])
 	Server->event_loop();
 	return 0;
 }
-

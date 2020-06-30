@@ -5,7 +5,9 @@ cc_library(
     deps = [ 
 	"//commen:commen_lib",
 	"//log:log_lib",
-	],
+	    "//mysqldb:mysql_lib",
+	    
+	 ],
 
     visibility = ["//visibility:public"],
 

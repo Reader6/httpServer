@@ -18,10 +18,14 @@ cc_library(
 )
 cc_library(
    name = "mysql_lib",
-   srcs = ["mysql_guard.cpp"],
-   hdrs = ["mysql_guard.h"],
+   srcs = ["mysql_guard.cpp",
+	   "testmysql.cpp"
+	   ],
+   hdrs = ["mysql_guard.h",
+	   "testmysql.h",
+	   "json.hpp"
+	   ],
    deps = [":sqlconnpool_lib"],
    visibility = ["//visibility:public"],
 		
 )
-

@@ -12,7 +12,7 @@ bool sql_conn::connect_Db(const string& host, const string& Suser, const string&
 	char server[] = "localhost";
 	char user[] = "root";
 	char password[] = "root";
-	char database[] = "mysql";
+	char database[] = "Qreader";
 	char *query;
 	mysql_conn = mysql_init((MYSQL *)0);
 	int rt;
@@ -30,7 +30,6 @@ bool sql_conn::connect_Db(const string& host, const string& Suser, const string&
 		
 		}
 		}	
-		return true;
 	}else{
 		cout << "database connection failed" << endl;
 	}

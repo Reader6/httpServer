@@ -1,6 +1,7 @@
 #include "http_conn.h"
-#include"commen/commen.h"
-
+#include "commen/commen.h"
+#include "../mysqldb/testmysql.h"
+#include "../mysqldb/mysql_guard.h"
 
 int http_conn::m_user_count = 0;
 int http_conn::m_epolled = -1;
@@ -386,16 +387,20 @@ http_conn::RESULT_CODE http_conn::parse_request_line(char* text) {
 http_conn::RESULT_CODE http_conn::parse_args(char *text) {
 	char * m_idx = text;
 	char * m_odx = text;
-
+	mysql_guard guard;
 	while(m_idx){
 		
 		text = strpbrk(text,"&");
 		if(text)*text++ = '\0';
-		if(m_idx) {
+		if(m_idx) {	
+
 			m_odx = strpbrk(m_idx,"=");
 			*m_odx++ ='\0';
 			m_args[m_idx]=m_odx;
-		std::cout<<m_idx<<":"<<m_odx<<std::endl;
+			DB_Connector a;
+			a.Select_ClassifyBook(guard(),m_args);
+			m_url = "/res.json";
+			std::cout<<m_idx<<":"<<m_odx<<std::endl;
 		}	
 		m_idx = text;
 	}
